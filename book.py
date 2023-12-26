@@ -8,6 +8,7 @@ class Book:
         self.language = None
         self.size = None
         self.filename = None
+        self.filepath = None
         self.parse_html(book_html)
         
     def parse_html(self, book_html):

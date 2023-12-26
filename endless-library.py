@@ -5,6 +5,13 @@ import json
 from bs4 import BeautifulSoup  
 import urllib.request
 from book import Book
+from email.message import EmailMessage
+import ssl
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
 
 # returns the html of a given url
 def cook_soup(url):  
@@ -68,10 +75,9 @@ def select_book(book_list):
 
 def download_book(book):    
     cdn_urls = ["https://cdn1.booksdl.org/get.php?md5=",
-                "https://cdn2.booksdl.org/get.php?md5=",
                 "https://cdn3.booksdl.org/get.php?md5="]
 
-    output_file = book.title + ".epub"
+    output_file = book.title + ".epub" #TODO smartdirmake stuff =
     
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
@@ -90,6 +96,7 @@ def download_book(book):
                 with open(output_file, "wb") as file:
                     file.write(response.read())
                 print(f"EPUB file downloaded successfully to {output_file}")
+                book.filepath = output_file
                 return  # Break out of the loop if download is successful
 
         except Exception:
@@ -98,11 +105,42 @@ def download_book(book):
     # If the loop completes without successful download, return an error
     print("Failed to download the book from all CDNs. Error 500.")
 
+
+def send_email(book):
+    config = json.load(open("config.json"))
+    email_sender = config["email_sender"]
+    email_password = config["email_password"]
+    email_receiver = config["email_receiver"]
+    
+    subject = f"Sending {book.title} to Kindle"
+        
+    em = MIMEMultipart()
+    em["From"] = email_sender
+    em["To"] = email_receiver
+    em["Subject"] = subject
+    
+    # Attach a file
+    file_path = book.filepath
+    attachment = open(file_path, "rb")
+    
+    part = MIMEBase("application", "octet-stream")
+    part.set_payload(attachment.read())
+    encoders.encode_base64(part)
+    part.add_header("Content-Disposition", f"attachment; filename= {file_path}")
+    
+    em.attach(part)
+    
+    context = ssl.create_default_context()
+    
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
+        smtp.login(email_sender, email_password)
+        smtp.sendmail(email_sender, email_receiver, em.as_string())
+    print(f"{book.title} successfully sent to Kindle.")
+    
+
 if __name__ == "__main__":
-    search_term = "the hero of olympus"
+    search_term = "the lost hero"
     book_list = scrape_book_list(search_term)
     selected_book = select_book(book_list)
     download_book(selected_book)
-    
-    
-    
+    send_email(selected_book)

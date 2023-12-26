@@ -1,2 +1,4 @@
 books
+book_downloads
 __pycache__
+config.json
