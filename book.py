@@ -8,6 +8,8 @@ class Book:
         self.language = None
         self.size = None
         self.filename = None
+        self.display_title = None
+        self.display_author = None
         self.filepath = None
         self.parse_html(book_html)
         
@@ -23,4 +25,4 @@ class Book:
         self.filename = split_metadata[3]
     
     def print_metadata(self):
-        return f"{self.title} / {self.author} / {self.language} / {self.size}"
+        return f"{self.display_title} / {self.display_author} /{self.size}"
