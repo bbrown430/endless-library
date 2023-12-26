@@ -3,7 +3,10 @@ import sys
 import os.path
 import json
 from bs4 import BeautifulSoup  
+import urllib.request
+from book import Book
 
+# returns the html of a given url
 def cook_soup(url):  
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -17,122 +20,89 @@ def cook_soup(url):
     else:
         sys.exit(f"Failed to retrieve the page. Status code: {response.status_code}")
 
-        
-def search_query(search_term):
-    #TODO only epub for now
+
+# searches the inputted query, filtering for .epubs and libgen.li source        
+def anna_search_formatter(search_term):
     base_url = "https://annas-archive.org/search?index=&q="
     formatted_search = search_term.replace(" ", "+")
-    url_ending = "&ext=epub&sort="
+    url_ending = "&ext=epub&src=lgli&sort="
     full_url = base_url + formatted_search + url_ending
     
     return full_url
 
 
 def scrape_book_list(search_term):
-    url = search_query(search_term)
-    
+    url = anna_search_formatter(search_term)
     soup = cook_soup(url)
+    books_html = soup.find_all('div', class_="h-[125] flex flex-col justify-center")
     
-    books = soup.find_all('div', class_="h-[125] flex flex-col justify-center")
+    books = []
+    scope = 5
     
-    #TODO add validation of book found
-    """for book in books:
-        title = book.find('h3').string
-        link = book.find('a')["href"]
-        full_link = "https://annas-archive.org" + link"""
+    for book_html in books_html[:scope]:
+        book = Book(book_html)
+        books.append(book)
+        
+    return books
+  
     
-    book = books[0]
-    title = book.find('h3').string
-    link = book.find('a')["href"]
+def select_book(book_list):
+    print("Select the number of the entry you want to select:")
+    for i, book in enumerate(book_list):
+        print(f"{[i+1]} {book.print_metadata()}")
     
-    return link
-
-def get_download_link(url):
-    base_url = "https://libgen.li/ads.php?md5="
-    
-    tag = url.split("/")[2]
-    
-    full_link = base_url + tag
-    print(full_link)
-    
-    soup = cook_soup(full_link)
-    link_container = soup.find("td", {"bgcolor": "#A9F5BC"})
-    download_link = link_container.find("a")["href"]
-    
-    print(download_link)
-
-""""
-def scrape_book(url):
-    soup = cook_soup(url)
-
-    download_div = soup.find("div", {"id": "md5-panel-downloads"})
-    
-    link_lists = download_div.find_all("ul")
-    
-    free_links = link_lists[1]
-    
-    print("test")
-"""
-
-def scrape_posters(url):
-    movieposters = []
-    showposters = []
-    
-    if ("theposterdb.com" in url) and ("set" in url):
-        soup = cook_soup(url)
-    else:
-        sys.exit("Poster set not found. Check the link you are inputting.")
-    
-    # find the poster grid
-    poster_div = soup.find('div', class_='row d-flex flex-wrap m-0 w-100 mx-n1 mt-n1')
-
-    # find all poster divs
-    posters = poster_div.find_all('div', class_='col-6 col-lg-2 p-1')
-
-    # loop through the poster divs
-    for poster in posters:
-        # get if poster is for a show or movie
-        media_type = poster.find('a', class_="text-white", attrs={'data-toggle': 'tooltip', 'data-placement': 'top'})['title']
-        # get high resolution poster image
-        overlay_div = poster.find('div', class_='overlay')
-        poster_id = overlay_div.get('data-poster-id')
-        poster_url = "https://theposterdb.com/api/assets/" + poster_id
-        # get metadata
-        title_p = poster.find('p', class_='p-0 mb-1 text-break').string
-
-        if media_type == "Show":
-            title = title_p.split(" (")[0]                   
-            if " - " in title_p:
-                split_season = title_p.split(" - ")[1]
-            else:
-                split_season = "Cover"
+    while True:    
+        try:
+            user_choice = int(input("Enter the number of the book you want to select: "))
             
-            showposter = {}
-            showposter["title"] = title
-            showposter["url"] = poster_url
-            showposter["season"] = split_season
-            showposters.append(showposter)
-
-        if media_type == "Movie":
-            title_split = title_p.split(" (")
-            if len(title_split[1]) != 5:
-                title = title_split[0] + " (" + title_split[1]
+            # Check if the input is within the valid range
+            if 1 <= user_choice <= len(book_list):
+                selected_book = book_list[user_choice - 1]
+                print(f"You selected: {selected_book.title}")
+                return selected_book
             else:
-                title = title_split[0]
-            year = title_split[-1].split(")")[0]
-                
-            movieposter = {}
-            movieposter["title"] = title
-            movieposter["url"] = poster_url
-            movieposter["year"] = int(year)
-            movieposters.append(movieposter)
+                print("Invalid input. Please enter a number within the valid range.")
+        except ValueError:
+            print("Invalid input. Please enter a numeric value.")
     
-    return movieposters, showposters
 
+def download_book(book):    
+    cdn_urls = ["https://cdn1.booksdl.org/get.php?md5=",
+                "https://cdn2.booksdl.org/get.php?md5=",
+                "https://cdn3.booksdl.org/get.php?md5="]
+
+    output_file = book.title + ".epub"
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
+
+    for cdn_url in cdn_urls:
+        url = cdn_url + book.md5
+        print(url)
+        try:
+            # Create a request with headers
+            request = urllib.request.Request(url, headers=headers)
+
+            # Open the URL and download the content
+            with urllib.request.urlopen(request) as response:
+                # Open a file and write the content of the response to it
+                with open(output_file, "wb") as file:
+                    file.write(response.read())
+                print(f"EPUB file downloaded successfully to {output_file}")
+                return  # Break out of the loop if download is successful
+
+        except Exception:
+            print(f"CDN unavailable, attempting next CDN.")
+
+    # If the loop completes without successful download, return an error
+    print("Failed to download the book from all CDNs. Error 500.")
 
 if __name__ == "__main__":
-    search_term = "the winners fredrik"
-    book_url = scrape_book_list(search_term)
-    book = get_download_link(book_url)
+    search_term = "the hero of olympus"
+    book_list = scrape_book_list(search_term)
+    selected_book = select_book(book_list)
+    download_book(selected_book)
+    
     
     
