@@ -32,7 +32,7 @@ def cook_soup(url):
 def anna_search_formatter(search_term):
     base_url = "https://annas-archive.org/search?index=&q="
     formatted_search = search_term.replace(" ", "+")
-    url_ending = "&ext=epub&src=lgli&sort="
+    url_ending = "&ext=epub&src=lgrs&sort="
     full_url = base_url + formatted_search + url_ending
     
     return full_url
@@ -74,33 +74,33 @@ def select_book(book_list):
     
 
 def download_book(book):    
-    cdn_urls = ["https://cdn1.booksdl.org/get.php?md5=",
-                "https://cdn3.booksdl.org/get.php?md5="]
-
-    output_file = book.title + ".epub" #TODO smartdirmake stuff =
-    
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
+    
+    cdn_url = "https://library.lol/fiction/"
+    url = cdn_url + book.md5
 
-    for cdn_url in cdn_urls:
-        url = cdn_url + book.md5
-        print(url)
-        try:
-            # Create a request with headers
-            request = urllib.request.Request(url, headers=headers)
+    output_file = book.title + ".epub" #TODO smartdirmake stuff =
+    
+    soup = cook_soup(url)
+    download_link = soup.find("a")["href"]
+    
+    try:
+        # Create a request with headers
+        request = urllib.request.Request(download_link, headers=headers)
 
-            # Open the URL and download the content
-            with urllib.request.urlopen(request) as response:
-                # Open a file and write the content of the response to it
-                with open(output_file, "wb") as file:
-                    file.write(response.read())
-                print(f"EPUB file downloaded successfully to {output_file}")
-                book.filepath = output_file
-                return  # Break out of the loop if download is successful
+        # Open the URL and download the content
+        with urllib.request.urlopen(request) as response:
+            # Open a file and write the content of the response to it
+            with open(output_file, "wb") as file:
+                file.write(response.read())
+            print(f"EPUB file downloaded successfully to {output_file}")
+            book.filepath = output_file
+            return  # Break out of the loop if download is successful
 
-        except Exception:
-            print(f"CDN unavailable, attempting next CDN.")
+    except Exception:
+        print(f"Download failed.")
 
     # If the loop completes without successful download, return an error
     print("Failed to download the book from all CDNs. Error 500.")
@@ -139,8 +139,8 @@ def send_email(book):
     
 
 if __name__ == "__main__":
-    search_term = "the lost hero"
+    search_term = "chamber of secrets"
     book_list = scrape_book_list(search_term)
     selected_book = select_book(book_list)
     download_book(selected_book)
-    send_email(selected_book)
+    #send_email(selected_book)
