@@ -44,7 +44,7 @@ def scrape_book_list(search_term):
     books_html = soup.find_all('div', class_="h-[125] flex flex-col justify-center")
     
     books = []
-    scope = 5
+    scope = 10
     
     for book_html in books_html[:scope]:
         book = Book(book_html)
@@ -53,22 +53,31 @@ def scrape_book_list(search_term):
     return books
   
     
-def select_book(book_list):
-    print("Select the number of the entry you want to select:")
+def select_book_menu(book_list):
+    print("Select the number of the book you want to select: ")
     for i, book in enumerate(book_list):
         print(f"{[i+1]} {book.print_metadata()}")
     
     while True:    
         try:
-            user_choice = int(input("Enter the number of the book you want to select: "))
+            user_input = input("Enter the number of the book you want to select (type 'exit' to exit, 'back' to go back): ")
             
-            # Check if the input is within the valid range
-            if 1 <= user_choice <= len(book_list):
-                selected_book = book_list[user_choice - 1]
-                print(f"You selected: {selected_book.title}")
-                return selected_book
+            if user_input.lower() == 'exit':
+                sys.exit("Goodbye!")
+
+            elif user_input.lower() == 'back':
+                break
+
             else:
-                print("Invalid input. Please enter a number within the valid range.")
+                user_choice = int(user_input)
+                
+                if 1 <= user_choice <= len(book_list):
+                    selected_book = book_list[user_choice - 1]
+                    print(f"You selected: {selected_book.title}")
+                    return(selected_book)
+                else:
+                    print("Invalid input. Please enter a number within the valid range.")
+
         except ValueError:
             print("Invalid input. Please enter a numeric value.")
     
@@ -138,9 +147,43 @@ def send_email(book):
     print(f"{book.title} successfully sent to Kindle.")
     
 
+def book_search_menu():
+    while True:
+        search_term = input("Search for a book (type 'exit' to exit, 'back' to go back): ")
+        if search_term.lower() == "exit":
+            sys.exit("Goodbye!")
+        elif search_term.lower() == "back":
+            break
+        else:
+            book_list = scrape_book_list(search_term)
+            selected_book = select_book_menu(book_list)
+            if selected_book is not None:
+                download_book(selected_book)
+
+
+def main_menu():
+    while True:
+        print("===== Endless Library =====")
+        print("[1] Search Mode")
+        print("[2] Import from Goodreads list")
+        print("[3] Exit")
+    
+        choice = input("Enter your choice [1/2/3]: ")
+
+        if choice == "1":
+            book_search_menu()
+        elif choice == "2":
+            print("Entering import list mode:")
+        elif choice == "3":
+            print("Exiting the program. Goodbye!")
+            sys.exit("Goodbye!") 
+        else:
+            print("Invalid choice. Please enter 1, 2, or 3.")
+
 if __name__ == "__main__":
-    search_term = "chamber of secrets"
-    book_list = scrape_book_list(search_term)
-    selected_book = select_book(book_list)
-    download_book(selected_book)
+    main_menu()
+    #search_term = "order of the phoenix"
+    #book_list = scrape_book_list(search_term)
+    #selected_book = select_book(book_list)
+    #download_book(selected_book)
     #send_email(selected_book)
