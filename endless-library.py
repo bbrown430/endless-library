@@ -12,6 +12,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
+import time
 
 # returns the html of a given url
 def cook_soup(url):  
@@ -222,13 +223,26 @@ def goodreads_menu():
             
             for book_string in book_searches:
                 book_list = scrape_book_list(book_string)
-                selected_book = book_list[0]
-                print(f"Downloading {selected_book.title} by {selected_book.author}")
-                if selected_book is not None:
-                    download_book(selected_book)
-                    if selected_book.filepath is not None:
-                        #send_email(selected_book)
-                        print("emailing!!!")
+                count = 0
+                while True:
+                    successful_download = False
+                    for book in book_list:
+                        print(f"Downloading {book.title} by {book.author}")
+                        if book is not None:
+                            download_book(book)
+                            if book.filepath is not None:
+                                #send_email(selected_book)
+                                print("emailing!!!")
+                                successful_download = True
+                                break
+                            else:
+                                count +=1
+                                break            
+                    if successful_download:
+                        break
+                    if count == len(book_list):
+                        break
+                    
 
 # main menu flow
 def main_menu():
