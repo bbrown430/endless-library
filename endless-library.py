@@ -70,27 +70,22 @@ def goodreads_scraper(list_url):
         book_count = int(count_text.replace('(', '').replace(')', ''))    
         pages_needed = math.ceil(book_count / 30)
         
-        book_strings = []
+        goodreads_books = []
         
         print("Beginning to scrape Goodreads list.")
         while page <= pages_needed:    
             book_table = soup.find("tbody", {"id": "booksBody"})
             book_list = book_table.findAll("tr")
             for book_html in book_list:
-                title = book_html.select_one('td.field.title a[title]').text.strip()
-                if "\n" in title:
-                    split_title = title.split("\n")
-                    title = split_title[0]
-                author = book_html.select_one('td.field.author a[href]').text
-                
-                book_strings.append(title + " " + author)
+                goodreads_book = Book(book_html, "goodreads")
+                goodreads_books.append(goodreads_book)
                 
             page +=1
             url_with_attrs = list_url + f"&page={page}&per_page=30"
             soup = cook_soup(url_with_attrs)
             
         print(f"Scraping complete. {book_count} books found!")
-        return book_strings
+        return goodreads_books
     except:
         print("Unable to scrpae Goodreads list! Make sure the account linked is not private.")
         return None
@@ -106,7 +101,7 @@ def scrape_book_list(search_term):
             scope = 10
             
             for book_html in books_html[:scope]:
-                book = Book(book_html)
+                book = Book(book_html, "anna")
                 if "summary" not in book.title.lower() and book.genre != "unknown":
                     books.append(book)
             return books
@@ -155,7 +150,7 @@ def select_book_menu(book_list):
             print("Invalid input. Please enter a numeric value.")
     
 # downloads book from library.lol server
-def download_book(book):    
+def download_book(book, abs_title):    
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
@@ -169,8 +164,13 @@ def download_book(book):
     
     if not os.path.exists("downloads"): 
         os.makedirs("downloads") 
+        
+    if abs_title is None: #TODO bad practice
+        title = book.title
+    else:
+        title = abs_title
     
-    output_file = "downloads/" + book.title + ".epub"
+    output_file = "downloads/" + title + ".epub" #TODO redeclaration
     
     soup = cook_soup(url)
     if soup is not None: 
@@ -193,7 +193,7 @@ def download_book(book):
         return
         
 # sends the book as an attachment to the kindle library
-def send_email(book):
+def send_email(book, abs_title):
     config = json.load(open("config.json"))
     email_sender = config["email_sender"]
     email_password = config["email_password"]
@@ -206,6 +206,11 @@ def send_email(book):
     em["To"] = email_receiver
     em["Subject"] = subject
     
+    if abs_title is None: #TODO bad practice
+        title = book.title
+    else:
+        title = abs_title
+    
     # Attach a file
     file_path = book.filepath
     attachment = open(file_path, "rb")
@@ -213,7 +218,7 @@ def send_email(book):
     part = MIMEBase("application", "octet-stream")
     part.set_payload(attachment.read())
     encoders.encode_base64(part)
-    filename = book.title + ".epub"
+    filename = title + ".epub"
     part.add_header("Content-Disposition", f"attachment; filename={filename}")
     
     em.attach(part)
@@ -223,7 +228,7 @@ def send_email(book):
     with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
         smtp.login(email_sender, email_password)
         smtp.sendmail(email_sender, email_receiver, em.as_string())
-    print(f"{book.title} successfully sent to Kindle.")
+    print(f"{title} successfully sent to Kindle.")
     
 # allows user to input a book and search for it
 def book_search_menu():
@@ -235,12 +240,19 @@ def book_search_menu():
             break
         else:
             book_list = scrape_book_list(search_term)
-            selected_book = select_book_menu(book_list)
-            if selected_book is not None:
-                download_book(selected_book)
-                if selected_book.filepath is not None:
-                    print("emailing...")
-                    #send_email(selected_book)
+            while True:
+                selected_book = select_book_menu(book_list)
+                if selected_book is not None:
+                    download_book(selected_book, None)
+                    if selected_book.filepath is not None:
+                        print("emailing...")
+                        break
+                        #send_email(selected_book, None)
+                    else:
+                        print("Download failed. Try a different book.")
+                else:
+                    break
+            
 
 
 def goodreads_menu():
@@ -254,29 +266,37 @@ def goodreads_menu():
             goodreads_books = goodreads_scraper(list_input)
             if goodreads_books is not None:
                 failed_downloads = []
-                
                 # loops through each book in goodreads list
                 for i, goodreads_book in enumerate(goodreads_books):
-                    print(f"Book {i+1}/{len(goodreads_books)} ---- {goodreads_book}")
-                    anna_results = scrape_book_list(goodreads_book)
-                    anna_length = len(anna_results)
-                    # loops through all anna search results
-                    for i, book in enumerate(anna_results):
-                        print(f"Attempting download {i+1}/{anna_length} for {book.title} by {book.author} ({book.size})")
-                        if book is not None: #??? when would this condition be met
-                            download_book(book)
-                            if book.filepath is not None:
-                                #send_email(book)
-                                print("emailing!!!")
-                                break
-                            if i+1 == anna_length:
-                                print(f"Unable to download {goodreads_book} :(")
-                                failed_downloads.append(goodreads_book)
-                                break 
-                
-                print(f"{len(failed_downloads)}/{len(goodreads_books)} failed downloads:")
-                for book in failed_downloads:
-                    print(f"\t{book}")
+                    print(f"Book {i+1}/{len(goodreads_books)} ---- {goodreads_book.title} by {goodreads_book.author}")
+                    if not os.path.exists(f"downloads/{goodreads_book.title}.epub"):
+                        search_term = f"{goodreads_book.title} {goodreads_book.author}"
+                        anna_results = scrape_book_list(search_term) #TODO stupid
+                        anna_length = len(anna_results)
+                        # loops through all anna search results
+                        for i, book in enumerate(anna_results):
+                            if i==0:
+                                print(f"Downloading {goodreads_book.title} by {goodreads_book.author} ({book.size})")
+                            else:
+                                print(f"Attempting {i+1}: Downloading {goodreads_book.title} by {goodreads_book.author} ({book.size})")
+                            if book is not None: #??? #TODO when would this condition be met
+                                download_book(book, goodreads_book.title)
+                                if book.filepath is not None:
+                                    #send_email(book)
+                                    print("emailing!!!")
+                                    break
+                                if i+1 == anna_length:
+                                    print(f"Unable to download {goodreads_book} :(")
+                                    failed_downloads.append(goodreads_book)
+                                    break
+                    else:
+                        print("Book already exists in downloads. Skipping...")
+                if len(failed_downloads) > 0:
+                    print(f"{len(failed_downloads)}/{len(goodreads_books)} failed downloads:")
+                    for book in failed_downloads:
+                        print(f"\t{book}")
+                else:
+                    print("No failed downloads!")
             else:
                 continue
                     
