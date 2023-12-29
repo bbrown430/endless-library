@@ -3,20 +3,20 @@ from bs4 import BeautifulSoup
 class Book:
     def __init__(self, book_html, website):
         self.title = None
-        self.md5 = None
         self.author = None
+        self.md5 = None
         self.language = None
         self.size = None
+        self.genre = None
         self.filename = None
-        self.display_title = None
-        self.display_author = None
+        self.display_string = None
+        self.filename = None
         self.filepath = None
         self.parse_html(book_html, website)
         
     def parse_html(self, book_html, website):
         if website == "anna":
             title = book_html.find('h3').string
-            self.title = title.replace(":", " -")
             link = book_html.find('a')["href"]
             self.md5 = link.split("/")[2]
             self.author = book_html.find("div", class_="max-lg:line-clamp-[2] lg:truncate leading-[1.2] lg:leading-[1.35] max-lg:text-sm italic").string
@@ -30,8 +30,14 @@ class Book:
             if "\n" in title:
                 split_title = title.split("\n")
                 title = split_title[0]
-            self.title = title.replace(":", " -")
             self.author = book_html.select_one('td.field.author a[href]').text
+            
+        self.title = title.replace(":", " -")
+        self.filename = self.title + ".epub"
+        self.filepath = "downloads/" + self.filename
+    
+    def string(self):
+        return f"{self.title} by {self.author}"
     
     def print_metadata(self):
         return f"{self.display_title} / {self.display_author} / {self.size}"
