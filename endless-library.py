@@ -34,7 +34,7 @@ def goodreads_menu():
                 if len(failed_downloads) > 0:
                     print(f"{len(failed_downloads)}/{len(goodreads_books)} failed downloads:")
                     for book in failed_downloads:
-                        print(f"\t{book}")
+                        print(f"\t{book.string()}")
                 else:
                     print("No failed downloads!")
         if list_input is None:

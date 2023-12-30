@@ -18,8 +18,8 @@ class Searcher:
             io_utils = IOUtils()
             successful = io_utils.download_book(book, abs_title)
             if successful:
-                #send_email(book)
-                print("emailing!!!")
+                io_utils.send_email(book, metadata_source.title)
+                #print("emailing!!!")
                 return True
             if i+1 == anna_length: # all sources failed
                 return False
@@ -74,8 +74,8 @@ class Searcher:
                     io_utils = IOUtils()
                     successful = io_utils.download_book(selected_book, None)
                     if successful:
-                        #send_email(book)
-                        print("emailing!!!")
+                        io_utils.send_email(book, None)
+                        #print("emailing!!!")
                         break
                     else:
                         print("Download failed. Try a different result.")

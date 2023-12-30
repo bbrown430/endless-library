@@ -13,12 +13,9 @@ class AnnaScraper(Scraper):
         
         return full_url
     
-    def list_processor(self, book_list):
-        # last index grabbed is invalid
-        abs_genre = book_list[0].genre
-        
-        # filters out unknown genres and "summary books"
-        book_list = [book for book in book_list if book.genre != "unknown" and book.genre == abs_genre]
+    def list_processor(self, book_list):        
+        # filters out unknown genres
+        book_list = [book for book in book_list if book.genre != "unknown"]
         
         bad_terms = ["summary", "conversation starters"]
         
