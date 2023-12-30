@@ -1,5 +1,6 @@
-from scaper import Scraper
-from book import Book
+from src.scaper import Scraper
+from src.io_utils import IOUtils
+from src.book import Book
 
 class AnnaScraper(Scraper):
     def __init__(self):
@@ -24,8 +25,8 @@ class AnnaScraper(Scraper):
         # filters out bad terms
         book_list = [book for book in book_list if all(bad_term not in book.title.lower() for bad_term in bad_terms)]
         
-        # filters out larger than 20mb
-        book_list = [book for book in book_list if float(book.size[:-2]) <= 20]
+        # filters out larger than 10mb
+        book_list = [book for book in book_list if float(book.size[:-2]) <= 10]
 
         #sorts list by filesize
         sorted_list = sorted(book_list, key=lambda book: float(book.size[:-2]))
@@ -37,7 +38,7 @@ class AnnaScraper(Scraper):
         url = self.search_formatter(search_term)
         while True:
             try:
-                soup = self.cook_soup(url)
+                soup = IOUtils.cook_soup(url)
                 books_html = soup.find_all('div', class_="h-[125] flex flex-col justify-center")
                 books_html.pop()
                 

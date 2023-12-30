@@ -1,10 +1,18 @@
-from scaper import Scraper
-from book import Book
+from src.scaper import Scraper
+from src.book import Book
+from src.io_utils import IOUtils
+from validators import url
 import math
 
 class GoodreadsScraper(Scraper):
     def __init__(self):
         super().__init__()
+    
+    def link_checker(self, list_url):
+        if url(list_url):
+            return list_url
+        else:
+            False
     
     # scrapes a list of books from a goodreads list, given the list url    
     def scrape(self, list_url):
@@ -12,7 +20,12 @@ class GoodreadsScraper(Scraper):
     
         url_with_attrs = list_url + f"&page={page}&per_page=30" #TODO list processing
         
-        soup = self.cook_soup(url_with_attrs)
+        url = self.link_checker(list_url)
+    
+        if not url:
+            return None
+        
+        soup = IOUtils.cook_soup(url)
         
         try:
             # determine number of books on shelf
@@ -35,7 +48,7 @@ class GoodreadsScraper(Scraper):
                     
                 page +=1
                 url_with_attrs = list_url + f"&page={page}&per_page=30"
-                soup = self.cook_soup(url_with_attrs)
+                soup = IOUtils.cook_soup(url_with_attrs)
                 
             print(f"Scraping complete. {book_count} books found!")
             return goodreads_books

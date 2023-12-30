@@ -1,29 +1,25 @@
-import sys
 import os
-from anna_scraper import AnnaScraper
-from goodreads_scraper import GoodreadsScraper
-from menu import Menu
-from searcher import Searcher
+from src.anna_scraper import AnnaScraper
+from src.goodreads_scraper import GoodreadsScraper
+from src.searcher import Searcher
+from src.io_utils import IOUtils
 
 class Menu:
-    
-    # an adaptable input menu with back and exit functionality
     @staticmethod
-    def input_menu(input_message):
-        while True:
-            user_input = input(input_message)
-            if user_input.lower() == "exit":
-                sys.exit("Goodbye!")
-            elif user_input.lower() == "back":
-                return None
-            else:
-                return user_input
+    def mission_report(failed_downloads, goodread_list_length):
+        print("----------------------------------------------")
+        if len(failed_downloads) > 0:
+            print(f"{len(failed_downloads)}/{goodread_list_length} failed downloads:")
+            for book in failed_downloads:
+                print(f"\t{book.string()}")
+        else:
+            print("No failed downloads!")
     
     # menu flow when inputting a goodreads list
     @staticmethod
     def goodreads_menu():
         while True:
-            list_input = Menu.input_menu("Enter a Goodreads list (type 'exit' to exit, 'back' to go back): ")
+            list_input = IOUtils.input_menu("Enter a Goodreads list (type 'exit' to exit, 'back' to go back): ")
             if list_input is not None: #allow for flow back
                 goodreads_scraper = GoodreadsScraper()
                 goodreads_books = goodreads_scraper.scrape(list_url=list_input)
@@ -36,8 +32,10 @@ class Menu:
                             anna_scraper = AnnaScraper()
                             anna_list = anna_scraper.scrape(search_term)
                             if anna_list:
+                                for book in anna_list:
+                                    book.update_metadata(goodreads_book)
                                 searcher = Searcher()
-                                success = searcher.automated_search(anna_list, goodreads_book)
+                                success = searcher.automated_search(anna_list)
                                 if not success:
                                     print(f"Unable to download {goodreads_book.title} :(")
                                     failed_downloads.append(goodreads_book)
@@ -46,13 +44,8 @@ class Menu:
                                 failed_downloads.append(goodreads_book)
                         else:
                             print("Book already exists in downloads. Skipping...")
-                    
-                    if len(failed_downloads) > 0:
-                        print(f"{len(failed_downloads)}/{len(goodreads_books)} failed downloads:")
-                        for book in failed_downloads:
-                            print(f"\t{book.string()}")
-                    else:
-                        print("No failed downloads!")
+                            
+                    Menu.mission_report(failed_downloads, len(goodreads_books))
                 else:
                     print("Unable to scrpae Goodreads list! Make sure the account linked is not private.")
             if list_input is None:
@@ -62,7 +55,7 @@ class Menu:
     @staticmethod
     def book_search_menu():
         while True:
-            search_term = Menu.input_menu("Search for a book (type 'exit' to exit, 'back' to go back): ")
+            search_term = IOUtils.input_menu("Search for a book (type 'exit' to exit, 'back' to go back): ")
             if search_term is not None:
                 anna_scraper = AnnaScraper()
                 anna_list = anna_scraper.scrape(search_term)

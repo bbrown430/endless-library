@@ -1,9 +1,8 @@
-from email.message import EmailMessage
 import ssl
+import sys
 import json
 import smtplib
 from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 import os
@@ -13,8 +12,21 @@ import urllib.request
 from bs4 import BeautifulSoup
 
 class IOUtils:
+    # an adaptable input menu with back and exit functionality
+    @staticmethod
+    def input_menu(input_message):
+        while True:
+            user_input = input(input_message)
+            if user_input.lower() == "exit":
+                sys.exit("Goodbye!")
+            elif user_input.lower() == "back":
+                return None
+            else:
+                return user_input
+    
     # returns HTML from a website into a parseable format
-    def cook_soup(self, url):  
+    @staticmethod
+    def cook_soup(url):  
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
@@ -26,23 +38,23 @@ class IOUtils:
                 soup = BeautifulSoup(response.text, 'html.parser')
                 return soup
             elif response.status_code == 500:
-                error_count +=1
-                print("for me")
+                error_count += 1
+                print("Internal Server Error! Retrying in 2 seconds...")
                 time.sleep(2)
             elif response.status_code == 429:
-                error_count +=1
+                error_count += 1
                 print("Moving too fast! Retrying in 10 seconds...")
                 time.sleep(10)
             else:
-                error_count +=1
+                error_count += 1
                 print(f"Failed to retrieve the page. Status code: {response.status_code}")
                 time.sleep(1)
-                
+
             if error_count == 5:
-                break   
+                raise Exception("Failed to retrieve the page after 5 attempts")
     
     # downloads book from library.lol server
-    def download_book(self, book, abs_title):    
+    def download_book(self, book):    
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         }
@@ -56,35 +68,28 @@ class IOUtils:
         
         if not os.path.exists("downloads"): 
             os.makedirs("downloads") 
-            
-        if abs_title is None:
-            title = book.title
-        else:
-            title = abs_title
-        
-        output_file = "downloads/" + title + ".epub" #TODO redeclaration
-        
+                
         soup = self.cook_soup(url)
         if soup is not None: 
             download_link = soup.find("a")["href"] 
             try:
                 request = urllib.request.Request(download_link, headers=headers)
                 with urllib.request.urlopen(request) as response:
-                    with open(output_file, "wb") as file:
+                    with open(book.filepath, "wb") as file:
                         file.write(response.read())
-                    print(f".epub file downloaded successfully to {output_file}")
-                    book.filepath = output_file
+                    print(f".epub file downloaded successfully to {book.filepath}")
                     return True
 
             except Exception as e:
-                print(f"Download failed here due to: {e}.")
+                print(f"Download failed due to: {e}.")
                 return False
         else:
             print(f"Download failed.")
             return False
     
+
     # sends the book as an attachment to the kindle library
-    def send_email(self, book, abs_title):
+    def send_email(self, book):
         config = json.load(open("config.json"))
         email_sender = config["email_sender"]
         email_password = config["email_password"]
@@ -96,20 +101,14 @@ class IOUtils:
         em["From"] = email_sender
         em["To"] = email_receiver
         em["Subject"] = subject
-        
-        if abs_title is None: #TODO bad practice
-            title = book.title
-        else:
-            title = abs_title
-        
+
         file_path = book.filepath
         attachment = open(file_path, "rb")
         
         part = MIMEBase("application", "octet-stream")
         part.set_payload(attachment.read())
         encoders.encode_base64(part)
-        filename = title + ".epub"
-        part.add_header("Content-Disposition", f"attachment; filename={filename}")
+        part.add_header("Content-Disposition", f"attachment; filename={book.filename}")
         
         em.attach(part)
         
@@ -118,4 +117,4 @@ class IOUtils:
         with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
             smtp.login(email_sender, email_password)
             smtp.sendmail(email_sender, email_receiver, em.as_string())
-        print(f"{title} successfully sent to Kindle.")
+        print(f"{book.title} successfully sent to Kindle.")

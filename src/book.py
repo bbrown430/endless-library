@@ -1,8 +1,17 @@
-from bs4 import BeautifulSoup  
+import re
 
 class Book:
     def __init__(self, book_html, website):
         self.parse_html(book_html, website)
+    
+    def filepath_prep(self, title):
+        restricted_characters = r'[\/:*?"<>|]'
+        if ":" in title:
+            split_title = title.split(":")
+            title = split_title[0]
+        self.title = re.sub(restricted_characters, '', title)
+        self.filename = self.title + ".epub"
+        self.filepath = "downloads/" + self.filename
     
     # parses html to determine book metadata    
     def parse_html(self, book_html, website):
@@ -21,11 +30,19 @@ class Book:
             if "\n" in title:
                 split_title = title.split("\n")
                 title = split_title[0]
-            self.author = book_html.select_one('td.field.author a[href]').text
-            
-        self.title = title.replace(":", " -")
-        self.filename = self.title + ".epub"
-        self.filepath = "downloads/" + self.filename
+            author = book_html.select_one('td.field.author a[href]').text
+            if " Jr." in author:
+                temp_author = author.replace(" Jr.", "")
+                author = temp_author
+            self.author = author
+
+        self.filepath_prep(title)
+
+    def update_metadata(self, abs_book):
+        title = abs_book.title
+        self.author = abs_book.author
+        self.filepath_prep(title)
+
     
     # returns a string fomatted "'book' by 'author'"
     def string(self):

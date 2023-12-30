@@ -1,26 +1,20 @@
-from menu import Menu
-from io_utils import IOUtils
+from src.io_utils import IOUtils
 
 class Searcher:
     # automatically grabs book from title and author
-    def automated_search(self, anna_list, metadata_source):
-        if metadata_source is not None:
-            abs_title = metadata_source.title
-            abs_author = metadata_source.author
-        
+    def automated_search(self, anna_list):
         anna_length = len(anna_list)
         # loops through all anna search results
         for i, book in enumerate(anna_list):
             if i==0:
-                print(f"Downloading {abs_title} by {abs_author} ({book.size})")
+                print(f"Downloading {book.title} by {book.author} ({book.size})")
             else:
-                print(f"Attempting {i+1}: Downloading {abs_title} by {abs_author} ({book.size})")
+                print(f"Attempt {i+1}: Downloading {book.title} by {book.author} ({book.size})")
             
             io_utils = IOUtils()
-            successful = io_utils.download_book(book, abs_title)
+            successful = io_utils.download_book(book)
             if successful:
-                io_utils.send_email(book, metadata_source.title)
-                #print("emailing!!!")
+                #io_utils.send_email(book)
                 return True
             if i+1 == anna_length: # all sources failed
                 return False
@@ -64,7 +58,7 @@ class Searcher:
             else:
                 print(f"{[i+1]} {book.display_string}")
         while True:    
-            book_number = Menu.input_menu("Enter the number of the book you want to select (type 'exit' to exit, 'back' to go back): ")
+            book_number = IOUtils.input_menu("Enter the number of the book you want to select (type 'exit' to exit, 'back' to go back): ")
             if book_number is not None:
                 try:
                     user_choice = int(book_number)
@@ -74,10 +68,9 @@ class Searcher:
                 if 1 <= user_choice <= len(anna_list):
                     selected_book = anna_list[user_choice - 1]
                     io_utils = IOUtils()
-                    successful = io_utils.download_book(selected_book, None)
+                    successful = io_utils.download_book(selected_book)
                     if successful:
-                        io_utils.send_email(book, None)
-                        #print("emailing!!!")
+                        #io_utils.send_email(selected_book)
                         break
                     else:
                         print("Download failed. Try a different result.")
