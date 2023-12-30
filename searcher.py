@@ -26,18 +26,36 @@ class Searcher:
 
     
     def menu_formatter(self, anna_list):
-        self.max_title_length = max(len(book.title) for book in anna_list)
+        self.title_limit = 50    
+        max_title_length = max(len(book.title) for book in anna_list)
         self.max_author_length = max(len(book.author) for book in anna_list)
+        
+        if max_title_length >= self.title_limit:
+            self.max_title_len = self.title_limit
+            bumper = 3
+        else:
+            self.max_title_len = max_title_length
+            bumper = 0
+        
         for book in anna_list:
-            title_padding = ' ' * (self.max_title_length - len(book.title))
+            title_len = len(book.title)
+            if title_len > self.max_title_len:
+                display_title = book.title[:self.max_title_len] + "..."
+            else:
+                title_padding = ' ' * (self.max_title_len - title_len + bumper)
+                display_title = book.title + title_padding
             author_padding = ' ' * (self.max_author_length - len(book.author))
-            display_title = book.title + title_padding
             display_author = book.author + author_padding
             book.display_string = f"{display_title} / {display_author} / {book.size}"
     
     def interactive_search(self, anna_list):
         self.menu_formatter(anna_list)
-        print(f"[#]  Title {(self.max_title_length - 5) * ' '}/ Author {(self.max_author_length - 6) * ' '}/ Size")
+        if self.max_title_len < self.title_limit:
+            title_padding = self.max_title_len - 5
+        else:
+            title_padding = self.max_title_len - 2
+        
+        print(f"[#]  Title {(title_padding) * ' '}/ Author {(self.max_author_length - 6) * ' '}/ Size")
         for i, book in enumerate(anna_list):
             if i < 9:
                 print(f"{[i+1]}  {book.display_string}")

@@ -2,16 +2,6 @@ from bs4 import BeautifulSoup
 
 class Book:
     def __init__(self, book_html, website):
-        self.title = None
-        self.author = None
-        self.md5 = None
-        self.language = None
-        self.size = None
-        self.genre = None
-        self.filename = None
-        self.display_string = None
-        self.filename = None
-        self.filepath = None
         self.parse_html(book_html, website)
         
     def parse_html(self, book_html, website):
@@ -38,6 +28,3 @@ class Book:
     
     def string(self):
         return f"{self.title} by {self.author}"
-    
-    def print_metadata(self):
-        return f"{self.display_title} / {self.display_author} / {self.size}"

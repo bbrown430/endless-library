@@ -49,6 +49,8 @@ def book_search_menu():
             if anna_list:
                 searcher = Searcher()
                 searcher.interactive_search(anna_list)
+            else:
+                print("No results! Try another search.")
         if search_term is None:
             break
                     

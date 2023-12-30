@@ -18,14 +18,18 @@ class AnnaScraper(Scraper):
         abs_genre = book_list[0].genre
         
         # filters out unknown genres and "summary books"
-        genre_filtered_list = [book for book in book_list if book.genre != "unknown" and book.genre == abs_genre]
+        book_list = [book for book in book_list if book.genre != "unknown" and book.genre == abs_genre]
         
         bad_terms = ["summary", "conversation starters"]
         
-        term_filtered_list = [book for book in genre_filtered_list if all(bad_term not in book.title.lower() for bad_term in bad_terms)]
+        # filters out bad terms
+        book_list = [book for book in book_list if all(bad_term not in book.title.lower() for bad_term in bad_terms)]
         
+        # filters out larger than 20mb
+        book_list = [book for book in book_list if float(book.size[:-2]) <= 20]
+
         #sorts list by filesize
-        sorted_list = sorted(term_filtered_list, key=lambda book: float(book.size[:-2]))
+        sorted_list = sorted(book_list, key=lambda book: float(book.size[:-2]))
         
         return sorted_list
     
