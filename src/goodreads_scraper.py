@@ -5,7 +5,8 @@ import math
 class GoodreadsScraper(Scraper):
     def __init__(self):
         super().__init__()
-        
+    
+    # scrapes a list of books from a goodreads list, given the list url    
     def scrape(self, list_url):
         page = 1
     
@@ -39,5 +40,4 @@ class GoodreadsScraper(Scraper):
             print(f"Scraping complete. {book_count} books found!")
             return goodreads_books
         except:
-            print("Unable to scrpae Goodreads list! Make sure the account linked is not private.")
             return None

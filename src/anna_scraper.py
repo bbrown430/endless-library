@@ -6,6 +6,7 @@ class AnnaScraper(Scraper):
         super().__init__()
         self.base_url="https://annas-archive.org/search?index=&q="
     
+    # formats the search url from search term
     def search_formatter(self, search_term):
         formatted_search = search_term.replace(" ", "+")
         url_ending = "&ext=epub&src=lgrs&sort=&lang=en" #TODO file type and language preference     
@@ -13,6 +14,7 @@ class AnnaScraper(Scraper):
         
         return full_url
     
+    # processes returned list to filter and sort
     def list_processor(self, book_list):        
         # filters out unknown genres
         book_list = [book for book in book_list if book.genre != "unknown"]
@@ -30,6 +32,7 @@ class AnnaScraper(Scraper):
         
         return sorted_list
     
+    # scrapes list of books from returned search, given search_term
     def scrape(self, search_term):
         url = self.search_formatter(search_term)
         while True:

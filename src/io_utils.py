@@ -13,6 +13,7 @@ import urllib.request
 from bs4 import BeautifulSoup
 
 class IOUtils:
+    # returns HTML from a website into a parseable format
     def cook_soup(self, url):  
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -101,7 +102,6 @@ class IOUtils:
         else:
             title = abs_title
         
-        # Attach a file
         file_path = book.filepath
         attachment = open(file_path, "rb")
         

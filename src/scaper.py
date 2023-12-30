@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import time
 
 class Scraper:
+    # returns HTML from a website into a parseable format
     def cook_soup(self, url):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -29,6 +30,6 @@ class Scraper:
 
             if error_count == 5:
                 raise Exception("Failed to retrieve the page after 5 attempts")
-
+    
     def scrape(self):
         raise NotImplementedError("Subclasses must implement the scrape method")

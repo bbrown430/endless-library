@@ -1,7 +1,8 @@
-from menu_tools import MenuTools
+from menu import Menu
 from io_utils import IOUtils
 
 class Searcher:
+    # automatically grabs book from title and author
     def automated_search(self, anna_list, metadata_source):
         if metadata_source is not None:
             abs_title = metadata_source.title
@@ -24,7 +25,7 @@ class Searcher:
             if i+1 == anna_length: # all sources failed
                 return False
 
-    
+    # formats metadata into properly formatted string
     def menu_formatter(self, anna_list):
         self.title_limit = 50    
         max_title_length = max(len(book.title) for book in anna_list)
@@ -48,6 +49,7 @@ class Searcher:
             display_author = book.author + author_padding
             book.display_string = f"{display_title} / {display_author} / {book.size}"
     
+    # allows user to select a book from a list of entries
     def interactive_search(self, anna_list):
         self.menu_formatter(anna_list)
         if self.max_title_len < self.title_limit:
@@ -62,7 +64,7 @@ class Searcher:
             else:
                 print(f"{[i+1]} {book.display_string}")
         while True:    
-            book_number = MenuTools.input_menu("Enter the number of the book you want to select (type 'exit' to exit, 'back' to go back): ")
+            book_number = Menu.input_menu("Enter the number of the book you want to select (type 'exit' to exit, 'back' to go back): ")
             if book_number is not None:
                 try:
                     user_choice = int(book_number)

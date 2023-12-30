@@ -3,7 +3,8 @@ from bs4 import BeautifulSoup
 class Book:
     def __init__(self, book_html, website):
         self.parse_html(book_html, website)
-        
+    
+    # parses html to determine book metadata    
     def parse_html(self, book_html, website):
         if website == "anna":
             title = book_html.find('h3').string
@@ -26,5 +27,6 @@ class Book:
         self.filename = self.title + ".epub"
         self.filepath = "downloads/" + self.filename
     
+    # returns a string fomatted "'book' by 'author'"
     def string(self):
         return f"{self.title} by {self.author}"
