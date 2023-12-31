@@ -16,7 +16,10 @@ class AnnaScraper(Scraper):
         return full_url
     
     # processes returned list to filter and sort
-    def list_processor(self, book_list):        
+    def list_processor(self, book_list):
+        # filters out books with no title
+        book_list = [book for book in book_list if book.title != "no_title"]
+                
         # filters out unknown genres
         book_list = [book for book in book_list if book.genre != "unknown"]
         
@@ -52,5 +55,6 @@ class AnnaScraper(Scraper):
                 if books:
                     books = self.list_processor(books)
                 return books
-            except:
+            except Exception as e:
                 print("Error occurred... retrying...")
+                print(e)

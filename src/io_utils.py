@@ -71,7 +71,12 @@ class IOUtils:
                 
         soup = self.cook_soup(url)
         if soup is not None: 
-            download_link = soup.find("a")["href"] 
+            download_link_container = soup.find("a")
+            if download_link_container is not None:
+                download_link = download_link_container["href"]
+            else:
+                print(f"Download failed.")
+                return False
             try:
                 request = urllib.request.Request(download_link, headers=headers)
                 with urllib.request.urlopen(request) as response:
