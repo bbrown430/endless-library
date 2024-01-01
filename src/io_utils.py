@@ -66,8 +66,10 @@ class IOUtils:
             
         url = cdn_url + book.md5
         
-        if not os.path.exists("downloads"): 
-            os.makedirs("downloads") 
+        dir_path = os.path.dirname(book.filepath)
+        
+        if not os.path.exists(dir_path): 
+            os.makedirs(dir_path) 
                 
         soup = self.cook_soup(url)
         if soup is not None: 
@@ -109,11 +111,11 @@ class IOUtils:
 
         file_path = book.filepath
         attachment = open(file_path, "rb")
-        
+                        
         part = MIMEBase("application", "octet-stream")
         part.set_payload(attachment.read())
         encoders.encode_base64(part)
-        part.add_header("Content-Disposition", f"attachment; filename={book.filename}")
+        part.add_header("Content-Disposition", f"attachment; filename={book.attachment_name}")
         
         em.attach(part)
         

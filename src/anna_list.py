@@ -2,7 +2,7 @@ from src.scaper import Scraper
 from src.io_utils import IOUtils
 from src.book import Book
 
-class AnnaScraper(Scraper):
+class AnnaList(Scraper):
     def __init__(self):
         super().__init__()
         self.base_url="https://annas-archive.org/search?index=&q="
