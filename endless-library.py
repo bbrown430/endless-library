@@ -6,7 +6,7 @@ if __name__ == "__main__":
     while True:
         print("===== Endless Library =====")
         print("[1] Search Mode")
-        print("[2] Import from Goodreads list")
+        print("[2] Import from Goodreads List")
         print("[3] Exit")
     
         choice = input("Enter your choice [1/2/3]: ")
