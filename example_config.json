@@ -1,0 +1,6 @@
+{
+    "mode" : "download",
+    "email_sender" : "example@domain.com",
+    "email_receiver" : "example@kindle.com",
+    "email_password" : "aaaa bbbb cccc dddd"
+}
