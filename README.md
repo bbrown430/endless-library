@@ -10,7 +10,6 @@ endless-library is a tool to easily send e-books to your Kindle, or just downloa
     - Listopia lists (e.g. https://www.goodreads.com/list/show/1.Best_Books_Ever)
     - Book series (e.g. https://www.goodreads.com/series/73758-the-hunger-games)
 - Download (and send) books by searching
-- Detailed list displaying song metadata, weighted ranking, and years of repitition
  
 ## Installation
 1. Extract all files into a folder (can delete the .gitignore)
