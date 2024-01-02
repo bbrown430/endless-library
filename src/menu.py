@@ -1,4 +1,3 @@
-import os
 from src.anna_list import AnnaList
 from src.goodreads_list import GoodreadsList
 from src.searcher import Searcher
