@@ -20,8 +20,8 @@ class Book:
         temp_author = re.sub(restricted_characters, '', self.author)
         self.author = temp_author
         self.filename = self.title + " - " + self.author + ".epub"
-        attachment_name = self.title + ".epub"
-        self.attachment_name = attachment_name.replace("'", "")
+        self.attachment_name = self.title + ".epub"
+        #self.attachment_name = attachment_name.replace("'", "")
         if list_name is not None:
             self.set_directory(list_name)
         else:
@@ -45,8 +45,6 @@ class Book:
                 split_title = title.split("\n")
                 title = split_title[0]
             author = book_html.select_one('td.field.author a[href]').text
-            
-            
         if website == "listopia":
             title = book_html.find('span', {'itemprop': 'name'}).text
             author = book_html.find('span', {'itemprop': 'author'}).text
@@ -58,6 +56,11 @@ class Book:
             if "(" in author:
                 split_author = filtered_author.split(" (")[0]
                 author = split_author
+        if website == "series":
+            title = book_html.find('span', {'itemprop': 'name'}).text
+            author = book_html.find('span', {'itemprop': 'author'}).text
+            filtered_author = author.replace("\n", "")
+            author = filtered_author
         if ", " in author:
                 author_split = author.split(", ")
                 author = author_split[1] + " " + author_split[0]

@@ -23,10 +23,13 @@ class AnnaList(Scraper):
         # filters out unknown genres
         book_list = [book for book in book_list if book.genre != "unknown"]
         
-        bad_terms = ["summary", "conversation starters"]
+        bad_terms = ["summary", "conversation starters", "summaries"]
         
         # filters out bad terms
         book_list = [book for book in book_list if all(bad_term not in book.title.lower() for bad_term in bad_terms)]
+        
+        # filters out bad terms
+        book_list = [book for book in book_list if all(bad_term not in book.author.lower() for bad_term in bad_terms)]
         
         # filters out larger than 10mb
         book_list = [book for book in book_list if float(book.size[:-2]) <= 10]
@@ -57,4 +60,4 @@ class AnnaList(Scraper):
                 return books
             except Exception as e:
                 print("Error occurred... retrying...")
-                print(e)
+                #print(e)

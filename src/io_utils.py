@@ -24,6 +24,22 @@ class IOUtils:
             else:
                 return user_input
     
+    @staticmethod
+    def duplicate_checker(filename):
+        directory = "downloads"
+        
+        all_files = []
+
+        # Walk through all directories and subdirectories
+        for path, subdirs, files in os.walk(directory):
+            for name in files:
+                all_files.append(name)
+        
+        if filename in all_files:
+            return True
+        else:
+            return False
+    
     # returns HTML from a website into a parseable format
     @staticmethod
     def cook_soup(url):  
@@ -51,7 +67,8 @@ class IOUtils:
                 time.sleep(1)
 
             if error_count == 5:
-                raise Exception("Failed to retrieve the page after 5 attempts")
+                print("Failed to retrieve the page after 5 attempts")
+                return None
     
     # downloads book from library.lol server
     def download_book(self, book):    
@@ -103,25 +120,30 @@ class IOUtils:
         email_receiver = config["email_receiver"]
         
         subject = f"Sending {book.title} to Kindle"
-            
-        em = MIMEMultipart()
-        em["From"] = email_sender
-        em["To"] = email_receiver
-        em["Subject"] = subject
+        
+        try:  
+            em = MIMEMultipart()
+            em["From"] = email_sender
+            em["To"] = email_receiver
+            em["Subject"] = subject
 
-        file_path = book.filepath
-        attachment = open(file_path, "rb")
-                        
-        part = MIMEBase("application", "octet-stream")
-        part.set_payload(attachment.read())
-        encoders.encode_base64(part)
-        part.add_header("Content-Disposition", f"attachment; filename={book.attachment_name}")
-        
-        em.attach(part)
-        
-        context = ssl.create_default_context()
-        
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
-            smtp.login(email_sender, email_password)
-            smtp.sendmail(email_sender, email_receiver, em.as_string())
-        print(f"{book.title} successfully sent to Kindle.")
+            file_path = book.filepath
+            attachment = open(file_path, "rb")
+                            
+            part = MIMEBase("application", "octet-stream")
+            part.set_payload(attachment.read())
+            encoders.encode_base64(part)
+            part.add_header("Content-Disposition", f"attachment; filename={book.attachment_name}")
+            
+            em.attach(part)
+            
+            context = ssl.create_default_context()
+            
+            with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
+                smtp.login(email_sender, email_password)
+                smtp.sendmail(email_sender, email_receiver, em.as_string())
+            print(f"{book.title} successfully emailed to Kindle.")
+        except smtplib.SMTPException as e:
+            print(f"Error sending email: {e}.")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}.")

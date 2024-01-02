@@ -16,8 +16,10 @@ class GoodreadsList(Scraper):
                 return "profile", formatted_url
             elif "/list/show" in list_url:
                 return "listopia", list_url
+            elif "/series/" in list_url:
+                return "series", list_url
         else:
-            False
+            return None, False
             
     
     def how_many_books(self):
@@ -106,5 +108,33 @@ class GoodreadsList(Scraper):
                 page +=1  
                 url_with_attrs = list_url + f"&page={page}"
                 soup = IOUtils.cook_soup(url_with_attrs)
+        
+        if type == "series":
+            # get book count
+            book_count_container = soup.find("div", class_="responsiveSeriesHeader__subtitle u-paddingBottomSmall").text
+            book_count = int(book_count_container.split(" ")[0])
+            
+            # get list name
+            raw_list_name = soup.text
+            filtered_list_name = raw_list_name.replace("\n", "")
+            name_split = filtered_list_name.split(" by")
+            self.list_name = name_split[0]
+            
+            # get books
+            book_list = soup.find_all("div", class_="listWithDividers__item")
+            main_series_count = 0
+            
+            for book_html in book_list:
+                if main_series_count < book_count:
+                    entry_number_container = book_html.find("h3").text
+                    entry_number_float = float(entry_number_container.split("Book ")[1])
+                    if entry_number_float % 1 == 0: #determine if main series entry
+                        if entry_number_float != 0:
+                            main_series_count += 1
+                        goodreads_book = Book(book_html, "series")
+                        goodreads_book.set_directory(self.list_name)
+                        goodreads_books.append(goodreads_book)
+                        
+            
         
         return goodreads_books

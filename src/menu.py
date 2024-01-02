@@ -27,7 +27,7 @@ class Menu:
                     failed_downloads = []
                     for i, goodreads_book in enumerate(goodreads_books): # loops through each book in goodreads list
                         print(f"Book {i+1}/{len(goodreads_books)} ---- {goodreads_book.string()}")
-                        if not os.path.exists(goodreads_book.filepath):
+                        if not IOUtils.duplicate_checker(goodreads_book.filename):
                             search_term = f"{goodreads_book.title} {goodreads_book.author}"
                             anna_list = AnnaList()
                             anna_list = anna_list.scrape(search_term)

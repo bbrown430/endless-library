@@ -1,5 +1,6 @@
 import sys
 from src.menu import Menu
+from src.io_utils import IOUtils
 
 if __name__ == "__main__":
     while True:
