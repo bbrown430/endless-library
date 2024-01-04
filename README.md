@@ -18,7 +18,7 @@ endless-library is a tool to easily download and send books to a Kindle, featuri
 ```bash
 pip install -r requirements.txt
 ```
-4. Rename `exampleconfig.json` to `config.json`, and populate with the proper information
+4. Rename `example_config.json` to `config.json`, and populate with the proper information
    - "mode"
         - "download" to only download books
            - **NOTE: if using "download" mode, you do not need to configure the email settings**
