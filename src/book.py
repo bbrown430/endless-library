@@ -75,8 +75,6 @@ class Book:
         self.author = abs_book.author
         self.filepath_prep(title, list_name)
         
-
-    
     # returns a string fomatted "'book' by 'author'"
     def string(self):
         return f"{self.title} by {self.author}"

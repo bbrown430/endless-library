@@ -43,7 +43,7 @@ class AnnaList(Scraper):
     def scrape(self, search_term):
         url = self.search_formatter(search_term)
         while True:
-            try:
+
                 soup = IOUtils.cook_soup(url)
                 books_html = soup.find_all('div', class_="h-[125] flex flex-col justify-center")
                 books_html.pop()
@@ -58,6 +58,3 @@ class AnnaList(Scraper):
                 if books:
                     books = self.list_processor(books)
                 return books
-            except Exception as e:
-                print("Error occurred... retrying...")
-                #print(e)
