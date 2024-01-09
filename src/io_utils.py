@@ -101,7 +101,7 @@ class IOUtils:
                 with urllib.request.urlopen(request) as response:
                     with open(book.filepath, "wb") as file:
                         file.write(response.read())
-                    print(f".epub file downloaded successfully to {book.filepath}")
+                    print(f".epub file downloaded successfully to: {book.filepath}")
                     return True
 
             except Exception as e:

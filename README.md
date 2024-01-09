@@ -1,6 +1,6 @@
 # endless-library
 
-endless-library is a tool to easily download and send books to a Kindle, featuring Goodreads list imports, and intuitive CLI search functionality.
+endless-library is a tool to easily download and send books to a Kindle, featuring a search menu, Goodreads list imports, and an intuitive CLI menu.
 
 ## Features
 
