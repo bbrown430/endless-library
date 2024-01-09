@@ -35,7 +35,11 @@ pip install -r requirements.txt
 
 ## Usage
 
-Run `endless-library.py`
+Run `endless-library.py` by double clicking, or by opening a terminal in the root folder and typing
+
+```bash
+python endless-library.py
+```
 
 ## Screenshots
 <img src="https://i.ibb.co/rfy3KC3/Screenshot-2024-01-01-213351.png" alt="cli screenshot" width="540"/>
