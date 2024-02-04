@@ -75,11 +75,14 @@ class IOUtils:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         }
-            
+        
         if book.genre == "non-fiction":
             cdn_url = "https://library.lol/main/"
-        if book.genre == "fiction":
+        elif book.genre == "fiction":
             cdn_url = "https://library.lol/fiction/"
+        else:
+            print("Invalid genre.")
+            return False
             
         url = cdn_url + book.md5
         
@@ -88,27 +91,37 @@ class IOUtils:
         if not os.path.exists(dir_path): 
             os.makedirs(dir_path) 
                 
-        soup = self.cook_soup(url)
-        if soup is not None: 
-            download_link_container = soup.find("a")
-            if download_link_container is not None:
-                download_link = download_link_container["href"]
+        try:
+            # Create an SSL context that ignores SSL certificate errors
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            
+            # Make the request to the website and get the HTML content
+            soup = self.cook_soup(url)
+            
+            if soup is not None: 
+                # Find the download link in the HTML
+                download_link_container = soup.find("a")
+                if download_link_container is not None:
+                    download_link = download_link_container["href"]
+                    
+                    # Make the request to the download link with SSL context
+                    request = urllib.request.Request(download_link, headers=headers)
+                    with urllib.request.urlopen(request, context=ssl_context) as response:
+                        # Save the file
+                        with open(book.filepath, "wb") as file:
+                            file.write(response.read())
+                        print(f".epub file downloaded successfully to: {book.filepath}")
+                        return True
+                else:
+                    print("Download link not found.")
+                    return False
             else:
-                print(f"Download failed.")
+                print("Download failed.")
                 return False
-            try:
-                request = urllib.request.Request(download_link, headers=headers)
-                with urllib.request.urlopen(request) as response:
-                    with open(book.filepath, "wb") as file:
-                        file.write(response.read())
-                    print(f".epub file downloaded successfully to: {book.filepath}")
-                    return True
-
-            except Exception as e:
-                print(f"Download failed due to: {e}.")
-                return False
-        else:
-            print(f"Download failed.")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}.")
             return False
     
 
