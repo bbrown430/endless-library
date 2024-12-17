@@ -45,7 +45,7 @@ class AnnaList(Scraper):
         while True:
 
                 soup = IOUtils.cook_soup(url)
-                books_html = soup.find_all('div', class_="h-[125] flex flex-col justify-center")
+                books_html = soup.find_all('div', class_="h-[110px] flex flex-col justify-center")
                 books_html.pop()
                 
                 books = []

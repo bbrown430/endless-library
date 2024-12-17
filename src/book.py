@@ -37,8 +37,8 @@ class Book:
             metadata = book_html.find("div", class_="line-clamp-[2] leading-[1.2] text-[10px] lg:text-xs text-gray-500").string
             split_metadata = metadata.split(",")
             self.language = split_metadata[0]
-            self.size = split_metadata[2].strip()
-            self.genre = split_metadata[3].split("(")[1].split(")")[0]
+            self.size = split_metadata[3].strip()
+            self.genre = split_metadata[4].split("(")[1].split(")")[0]
         if website == "profile":
             title = book_html.select_one('td.field.title a[title]').text.strip()
             if "\n" in title:
