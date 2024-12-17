@@ -77,10 +77,10 @@ class IOUtils:
         }
             
         if book.genre == "non-fiction":
-            cdn_url = "https://library.lol/main/"
+            cdn_url = "https://library.gift/main/"
         if book.genre == "fiction":
-            cdn_url = "https://library.lol/fiction/"
-            
+            cdn_url = "https://library.gift/fiction/"
+
         url = cdn_url + book.md5
         
         dir_path = os.path.dirname(book.filepath)
