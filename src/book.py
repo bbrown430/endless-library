@@ -36,9 +36,12 @@ class Book:
             author = book_html.find("div", class_="max-lg:line-clamp-[2] lg:truncate leading-[1.2] lg:leading-[1.35] max-lg:text-sm italic").string
             metadata = book_html.find("div", class_="line-clamp-[2] leading-[1.2] text-[10px] lg:text-xs text-gray-500").string
             split_metadata = metadata.split(",")
+            # There may be more than one command separated language option
+            epub_index = _get_epub_index(split_metadata)
+            # If there is more than one language then this value will not be accurate
             self.language = split_metadata[0]
-            self.size = split_metadata[3].strip()
-            self.genre = split_metadata[4].split("(")[1].split(")")[0]
+            self.size = split_metadata[epub_index + 2].strip()
+            self.genre = split_metadata[epub_index + 3].split("(")[1].split(")")[0]
         if website == "profile":
             title = book_html.select_one('td.field.title a[title]').text.strip()
             if "\n" in title:
@@ -74,7 +77,18 @@ class Book:
         title = abs_book.title
         self.author = abs_book.author
         self.filepath_prep(title, list_name)
-        
+
     # returns a string fomatted "'book' by 'author'"
     def string(self):
         return f"{self.title} by {self.author}"
+
+
+def _get_epub_index(split_metadata):
+    epub_index = 0
+    while True:
+        if "epub" in split_metadata[epub_index]:
+            break
+        epub_index += 1
+        if epub_index >= len(split_metadata):
+            raise Exception("Non-epub book found")
+    return epub_index
