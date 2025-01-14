@@ -50,6 +50,5 @@ python endless-library.py
 - Email sending only supports Gmail accounts.
 
 ## Future Features
-- Additional mirror support
 - Email support outside of Gmail accounts.
 - Documented testing
