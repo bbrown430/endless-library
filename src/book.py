@@ -3,12 +3,12 @@ import re
 class Book:
     def __init__(self, book_html, website):
         self.parse_html(book_html, website)
-    
+
     def set_directory(self, list_name):
         restricted_characters = r'[\/:*?"<>|]'
         formatted_list_name =  re.sub(restricted_characters, '', list_name)
         self.filepath = f"downloads/{formatted_list_name}/{self.filename}"
-    
+
     def filepath_prep(self, title, list_name):
         restricted_characters = r'[\/:*?"<>|]'
         if title is None:
@@ -26,8 +26,8 @@ class Book:
             self.set_directory(list_name)
         else:
             self.filepath = f"downloads/{self.filename}"
-    
-    # parses html to determine book metadata    
+
+    # parses html to determine book metadata
     def parse_html(self, book_html, website):
         if website == "anna":
             title = book_html.find('h3').string
