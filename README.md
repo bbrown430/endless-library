@@ -31,7 +31,7 @@ pip install -r requirements.txt
         - **NOTE: this email address can be found [here](https://www.amazon.com/sendtokindle/email)**
     - "email_password"
         - the app password of the Gmail account under "email_sender"
-        - **NOTE: an app password can be generated [here](https://support.google.com/accounts/answer/185833?hl=en)** 
+        - **NOTE: an app password can be generated [here](https://support.google.com/accounts/answer/185833?hl=en)**
 
 ## Usage
 
@@ -46,9 +46,19 @@ python endless-library.py
 
 
 ## Known Issues / Shortcomings
-- Some .epub files will be rejected when sent to Kindle. I haven't determined what causes some .epubs to be unsupported, but when an error occurs, you will receive an email titled "There was a problem with the document(s) you sent to Kindle." This is not a shortcoming of this program, rather, the Kindle's .epub processing. 
+- Some .epub files will be rejected when sent to Kindle. I haven't determined what causes some .epubs to be unsupported, but when an error occurs, you will receive an email titled "There was a problem with the document(s) you sent to Kindle." This is not a shortcoming of this program, rather, the Kindle's .epub processing.
 - Email sending only supports Gmail accounts.
 
 ## Future Features
 - Email support outside of Gmail accounts.
 - Documented testing
+
+## Send epub to kindle
+
+If you only want to send an epub to your Kindle, you can use the `send-book.py` script.
+
+First, configure email settings in `config.json` as described above.
+
+```bash
+python send-book.py "path/to/your/book.epub"
+```
