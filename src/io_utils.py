@@ -139,10 +139,22 @@ class IOUtils:
                     # for libgen.li links
                     response = requests.get(download_link, headers=headers)
                     soup2 = BeautifulSoup(response.text, 'html.parser')
-                    download_link = soup2.find_all("a", href=True, string="GET")[0]["href"]
-                    # libgen.li has a partial link for the download
-                    if "https://" not in download_link:
-                        download_link = urllib.parse.urlparse(response.url)._replace(path=download_link, query='').geturl()
+                    download_link_container = soup2.find_all("a", href=True, string="GET")
+                    if download_link_container:
+                        download_link = download_link_container[0]["href"]
+                        # libgen.li has a partial link for the download
+                        if "https://" not in download_link:
+                            download_link = urllib.parse.urlparse(response.url)._replace(path=download_link, query='').geturl()
+                    else:
+                        # libgen.li link is not available so try for IPFS link
+                        ipfs_link = get_ipfs_link(soup)
+                        ipfs_response = requests.get(ipfs_link, headers=headers)
+                        ipfs_soup = BeautifulSoup(ipfs_response.text, 'html.parser')
+                        ipfs_download_link_container = ipfs_soup.find_all("a", string="GET")
+                        if ipfs_download_link_container:
+                            download_link = ipfs_download_link_container[0]["href"]
+                        else:
+                            return False # Failure
                 request = urllib.request.Request(download_link, headers=headers)
                 with urllib.request.urlopen(request) as response:
                     with open(book.filepath, "wb") as file:
@@ -236,3 +248,10 @@ class LimitedRotatingBookCDN:
         if DEBUG:
             print(f"get_book_url url: {url}")
         return url
+
+
+def get_ipfs_link(soup):
+    for anchor in soup.find_all('a'):
+        if "IPFS" in anchor.text or "IPFS" in anchor['href']:
+            ipfs_link = anchor['href']
+            return ipfs_link
