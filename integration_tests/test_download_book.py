@@ -14,3 +14,14 @@ def tests_download_book():
     io_utils.download_book(book)
     assert os.path.exists(book.filepath) is True
     os.remove(book.filepath)
+
+
+def tests_book_dead_libgenli_link():
+    with open("integration_tests/generative_ai_book.html", "r") as file:
+        soup = BeautifulSoup(file.read())
+    book = Book(soup, "anna")
+    io_utils = IOUtils()
+    assert os.path.exists(book.filepath) is False
+    io_utils.download_book(book)
+    assert os.path.exists(book.filepath) is True
+    os.remove(book.filepath)
