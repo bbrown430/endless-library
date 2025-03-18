@@ -78,7 +78,7 @@ class IOUtils:
     @staticmethod
     def get_cdn():
         cdn = LimitedRotatingBookCDN(
-            ["https://libgen.is", "https://libgen.rs", "https://libgen.st"]
+            ["https://libgen.li", "https://libgen.gs", "https://libgen.vg"]
         )
         return cdn
 
