@@ -78,7 +78,7 @@ class IOUtils:
     @staticmethod
     def get_cdn():
         cdn = LimitedRotatingBookCDN(
-            ["https://libgen.li", "https://libgen.gs", "https://libgen.vg"]
+            ["https://libgen.is", "https://libgen.rs", "https://libgen.st"]
         )
         return cdn
 
@@ -95,12 +95,12 @@ class IOUtils:
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
 
-        soup = None
+        libgenrs_soup = None
         while True:
             book_url = cdn.get_book_url(book)
             print(f"Attempting to download {book.title} from {cdn.cur_url}...")
             try:
-                soup = self.cook_soup(book_url)
+                libgenrs_soup = self.cook_soup(book_url)
             except requests.exceptions.RequestException as e:
                 print(f"Failed to download {book.title} from {cdn.cur_url} due to: {e}.")
                 try:
@@ -108,112 +108,87 @@ class IOUtils:
                 except StopIteration:
                     break
                 continue
-            if soup is None:
+            if libgenrs_soup is None:
                 try:
                     cdn.next()
                 except StopIteration:
                     break
                 continue
             break
-        if soup is not None:
-            download_link_container = soup.find("a")
-            indirect_download = False
-            if download_link_container is not None:
-                download_link = download_link_container["href"]
-            else:
-                print(f"Download failed.")
-                return False
-            # libgen fiction mirror page
-            if download_link == '/dbdumps/':
-                indirect_download = True
-                download_link = soup.find_all('ul', class_="record_mirrors")[0].find_all('a')[1]["href"]
-            # Libgen mirror page for nonfiction
-            elif "setlang" in download_link:
-                download_link = soup.find_all('a', string="Libgen.li")[0]["href"]
-                indirect_download = True
-            max_retries = 5
-            retries = 0
-            while True:
-                try:
-                    if DEBUG:
-                        print(f"Download link: {download_link}")
-                    if indirect_download:
-                        # libgen.is has an indrect download to libgen.li
-                        # for libgen.li links
-                        response = requests.get(download_link, headers=headers)
-                        soup2 = BeautifulSoup(response.text, 'html.parser')
-                        download_link_container = soup2.find_all("a", href=True, string="GET")
-                        if download_link_container:
-                            download_link = download_link_container[0]["href"]
-                            # libgen.li has a partial link for the download
-                            if "https://" not in download_link:
-                                download_link = urllib.parse.urlparse(response.url)._replace(path=download_link, query='').geturl()
-                        else:
-                            # libgen.li link is not available so try for IPFS link
-                            ipfs_link = get_ipfs_link(soup)
-                            ipfs_response = requests.get(ipfs_link, headers=headers)
-                            ipfs_soup = BeautifulSoup(ipfs_response.text, 'html.parser')
-                            ipfs_download_link_container = ipfs_soup.find_all("a", string="GET")
-                            if ipfs_download_link_container:
-                                download_link = ipfs_download_link_container[0]["href"]
-                            else:
-                                return False # Failure
-                    request = urllib.request.Request(download_link, headers=headers)
-                    print(f"Downloading {book.title} from {download_link}...")
-                    with urllib.request.urlopen(request) as response:
-                        with open(book.filepath, "wb") as file:
-                            file.write(response.read())
-                        print(f".epub file downloaded successfully to: {book.filepath}")
-                        return True
+        if libgenrs_soup is not None:
+            try: 
+                download_link_container = libgenrs_soup.find("a", string=("Libgen.rs", "Libgen & IPFS & Tor"))
+                if download_link_container:
+                    booksms_downloadlink = download_link_container.get("href")
+                    booksms_soup = self.cook_soup(booksms_downloadlink)
+                    abs_download_link_container = booksms_soup.find("a", string="GET")
+                    if abs_download_link_container:
+                        abs_download_link = abs_download_link_container.get("href")
+                    
+                    print(abs_download_link)
 
-                except Exception as e:
-                    print(f"Download failed due to: {e}.")
-                    if retries < max_retries:
-                        retries += 1
-                        print(f"Retrying download for {book.title}...")
-                    else:
-                        return False
+                request = urllib.request.Request(abs_download_link, headers=headers)
+                print(f"Downloading {book.title} from {abs_download_link}...")
+                with urllib.request.urlopen(request) as response:
+                    with open(book.filepath, "wb") as file:
+                        file.write(response.read())
+                    print(f".epub file downloaded successfully to: {book.filepath}")
+                    return True
+            except Exception as e:
+                print(f"An unexpected error occurred: {e}.")
+                return False
         else:
             print(f"Download failed.")
             return False
 
 
     # sends the book as an attachment to the kindle library
-    def send_email(self, book):
-        config = json.load(open("config.json"))
-        email_sender = config["email_sender"]
-        email_password = config["email_password"]
-        email_receiver = config["email_receiver"]
-
-        subject = f"Sending {book.title} to Kindle"
-
+    def send_email(self, book, user: str):
         try:
+            # Load config and user email mappings
+            config = json.load(open("config.json"))
+            users = json.load(open("users.json"))
+
+            email_sender = config["email_sender"]
+            email_password = config["email_password"]
+
+            # Look up the receiver email from users.json
+            email_receiver = users.get(user.lower())
+            if not email_receiver:
+                print(f"User '{user}' not found in users.json.")
+                return False
+
+            subject = f"Sending {book.title} to Kindle"
+
+            # Build email
             em = MIMEMultipart()
             em["From"] = email_sender
             em["To"] = email_receiver
             em["Subject"] = subject
 
-            file_path = book.filepath
-            attachment = open(file_path, "rb")
+            # Attach file
+            with open(book.filepath, "rb") as attachment:
+                part = MIMEBase("application", "octet-stream")
+                part.set_payload(attachment.read())
+                encoders.encode_base64(part)
+                part.add_header("Content-Disposition", f"attachment; filename={book.attachment_name}")
+                em.attach(part)
 
-            part = MIMEBase("application", "octet-stream")
-            part.set_payload(attachment.read())
-            encoders.encode_base64(part)
-            part.add_header("Content-Disposition", f"attachment; filename={book.attachment_name}")
-
-            em.attach(part)
-
+            # Send email
             context = ssl.create_default_context()
-
             with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
                 smtp.login(email_sender, email_password)
                 smtp.sendmail(email_sender, email_receiver, em.as_string())
-            print(f"{book.title} successfully emailed to Kindle.")
+
+            print(f"{book.title} successfully emailed to {email_receiver}.")
+            return True
+
         except smtplib.SMTPException as e:
             print(f"Error sending email: {e}.")
+            return False
         except Exception as e:
             print(f"An unexpected error occurred: {e}.")
-
+            return False
 
 class LimitedRotatingBookCDN:
     """A rotating CDN for downloading books from multiple sources"""

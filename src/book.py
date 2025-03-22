@@ -1,8 +1,24 @@
+# book.py
+
 import re
 
 class Book:
     def __init__(self, book_html, website):
         self.parse_html(book_html, website)
+
+    def to_dict(self):
+        return {
+            "title": self.title,
+            "author": self.author,
+            "image": self.img,
+            "size": self.size,
+            "language": getattr(self, "language", None),
+            "genre": getattr(self, "genre", None),
+            "attachment_name": self.attachment_name,
+            "filepath": self.filepath,
+            "md5": getattr(self, "md5", None),
+            "display_string": getattr(self, "display_string", None)
+    }
 
     def set_directory(self, list_name):
         restricted_characters = r'[\/:*?"<>|]'
@@ -16,8 +32,14 @@ class Book:
         if ":" in title:
             split_title = title.split(":")
             title = split_title[0]
-        self.title = re.sub(restricted_characters, '', title)
-        temp_author = re.sub(restricted_characters, '', self.author)
+        if "(" in title:
+            split_title = title.split("(")
+            title = split_title[0]
+        if "[" in title:
+            split_title = title.split("[")
+            title = split_title[0]
+        self.title = re.sub(restricted_characters, '', title).strip()
+        temp_author = re.sub(restricted_characters, '', self.author).strip()
         self.author = temp_author
         self.filename = self.title + " - " + self.author + ".epub"
         self.attachment_name = self.title + ".epub"
@@ -33,6 +55,8 @@ class Book:
             title = book_html.find('h3').string
             link = book_html.find('a')["href"]
             self.md5 = link.split("/")[2]
+            src = book_html.find('img')['src']
+            self.img = "" if "libgen.is" in src else src # libgen.is images will be blocked
             author = book_html.find("div", class_="max-lg:line-clamp-[2] lg:truncate leading-[1.2] lg:leading-[1.35] max-lg:text-sm italic").string
             metadata = book_html.find("div", class_="line-clamp-[2] leading-[1.2] text-[10px] lg:text-xs text-gray-500").string
             split_metadata = metadata.split(",")
@@ -81,8 +105,7 @@ class Book:
     # returns a string fomatted "'book' by 'author'"
     def string(self):
         return f"{self.title} by {self.author}"
-
-
+    
 def _get_epub_index(split_metadata):
     epub_index = 0
     while True:
