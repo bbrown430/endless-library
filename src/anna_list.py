@@ -48,15 +48,18 @@ class AnnaList(Scraper):
 
                 soup = IOUtils.cook_soup(url)
                 books_html = soup.find_all('div', class_="h-[110px] flex flex-col justify-center")
-                books_html.pop()
-                
+
+                # Only pop if there are items in the list
+                if books_html:
+                    books_html.pop()
+
                 books = []
                 scope = 10
-                
+
                 for book_html in books_html[:scope]:
                     book = Book(book_html, "anna")
-                    books.append(book)  
-                
+                    books.append(book)
+
                 if books:
                     books = self.list_processor(books)
                 return books
