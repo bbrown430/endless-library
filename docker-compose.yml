@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  endless-library:
+    build: .
+    container_name: endless-library-api
+    ports:
+      - "38100:38100"
+    volumes:
+      # Mount config files
+      - ./config.json:/app/config.json:ro
+      - ./users.json:/app/users.json:ro
+      # Mount downloads directory for persistence
+      - ./downloads:/app/downloads
+    environment:
+      # Optional environment variables
+      - TZ=America/New_York
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:38100/docs')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
