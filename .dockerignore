@@ -1,0 +1,41 @@
+# Git files
+.git
+.gitignore
+
+# Python cache
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Downloads directory (should be mounted as volume)
+downloads/*
+
+# Config files (should be mounted as volumes)
+config.json
+
+# Test files
+test_*.py
+*_test.py
+tests/
+integration_tests/
+
+# Documentation
+*.md
+README.md
+
+# Other
+.DS_Store
+*.log
